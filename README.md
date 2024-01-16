@@ -4,7 +4,9 @@ Actor-like multi-threading library based on SpringBoot, developing a relatively 
 
 ## Example
 
-Import the following libraries:
+Import the following libraries | 引入以下的类库:
+
+> note: websocket is not required, can switch netty to enable tcp | websocket 并不是必须, 可以切换 netty 启用 tcp
 
 ```xml
 
@@ -23,7 +25,7 @@ Import the following libraries:
 </dependencies>
 ```
 
-First, create actor config:
+First, create actor config | 首先, 创建 Actor 配置:
 
 ```java
 
@@ -45,7 +47,7 @@ public class ActorConfig {
 }
 ```
 
-Afterwards, Generate websocket server:
+Afterwards, generate websocket server | 之后, 生成 websocket 服务:
 
 ```java
 /**
@@ -153,7 +155,7 @@ public class WebSocketApplication extends TextWebSocketHandler {
 }
 ```
 
-By the way, don't forget the websocket configuration:
+By the way, don't forget the websocket configuration | 随便说下, 不要忘记 websocket 配置:
 
 ```java
 
@@ -233,7 +235,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
 }
 ```
 
-Okay, now it's time to write the logic code:
+Okay, now it's time to write the logic code | 好的, 现在可以编写逻辑代码:
 
 ```java
 @EnableActor(owner = EchoLogic.class)
@@ -286,7 +288,7 @@ public class EchoLogic extends ActorConfigurer {
 }
 ```
 
-Request json data, test the logical code:
+Request json data, test the logical code | 请求 JSON 数据, 测试这些逻辑代码:
 
 ```json lines
 // echo mapping
