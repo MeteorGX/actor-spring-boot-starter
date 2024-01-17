@@ -105,15 +105,17 @@ public abstract class ActorConfigurer {
      *
      * @throws Exception Error
      */
-    public void destroy() throws Exception {}
+    public void destroy() throws Exception {
+    }
 
 
     /**
      * Data preprocessing | 数据预处理
+     *
      * @param params data
      * @return Object[]
      */
-    public Object[] filter(Object[] params) throws Exception{
+    public Object[] filter(Object[] params) throws Exception {
         return params;
     }
 
@@ -236,13 +238,14 @@ public abstract class ActorConfigurer {
         if (status.isEmpty() || status.contains(event.getState())) {
             try {
                 future.invoke(filter(event.getArgs()));
-            }catch (Exception exception){
+            } catch (Exception exception) {
                 throw new RuntimeException(exception);
             } finally {
                 readLock.unlock();
             }
+        } else {
+            readLock.unlock();
         }
-        readLock.unlock();
     }
 
 }
