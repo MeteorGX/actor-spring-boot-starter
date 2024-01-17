@@ -236,9 +236,10 @@ public abstract class ActorConfigurer {
         if (status.isEmpty() || status.contains(event.getState())) {
             try {
                 future.invoke(filter(event.getArgs()));
-            } catch (Exception exception) {
-                readLock.unlock();
+            }catch (Exception exception){
                 throw new RuntimeException(exception);
+            } finally {
+                readLock.unlock();
             }
         }
         readLock.unlock();
