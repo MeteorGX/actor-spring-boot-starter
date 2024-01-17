@@ -70,9 +70,13 @@ public class ActorEventContainer extends HashMap<Integer, ActorConfigurer> {
 
 
     public void destroy() throws Exception {
-        monitor.shutdown();
-        for (ActorConfigurer configurer : configurers) {
-            configurer.destroy();
+        try {
+            monitor.shutdown();
+            while (!monitor.isShutdown()){ /* wait monitor quit */}
+        } finally {
+            for (ActorConfigurer configurer : configurers) {
+                configurer.destroy();
+            }
         }
     }
 

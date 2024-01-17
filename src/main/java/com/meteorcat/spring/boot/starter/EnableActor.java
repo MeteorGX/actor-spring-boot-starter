@@ -1,6 +1,7 @@
 package com.meteorcat.spring.boot.starter;
 
 
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.lang.annotation.*;
@@ -12,6 +13,7 @@ import java.lang.annotation.*;
 @Component
 @Inherited
 @Documented
+@Order(value = 0)
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface EnableActor {

@@ -20,7 +20,7 @@ Import the following libraries | 引入以下的类库:
     <dependency>
         <groupId>com.meteorcat.spring.boot</groupId>
         <artifactId>actor-spring-boot-starter</artifactId>
-        <version>1.0.5-SNAPSHOT</version>
+        <version>{actor-starter-version}</version>
     </dependency>
 </dependencies>
 ```
@@ -42,7 +42,16 @@ public class ActorConfig {
 
     @Bean(initMethod = "init", destroyMethod = "destroy")
     public ActorEventContainer searchActor() {
-        return ActorSearcher.build(context, 4);
+        ActorEventContainer container = new ActorEventContainer(new ActorEventMonitor(5));
+        container.setIdleThreads(1); // idle thread
+        Map<String, ActorConfigurer> classes = context.getBeansOfType(ActorConfigurer.class);
+        for (Map.Entry<String, ActorConfigurer> clazz : classes.entrySet()) {
+            ActorConfigurer configurer = clazz.getValue();
+            for (Integer value : configurer.values()) {
+                container.put(value, configurer);
+            }
+        }
+        return container;
     }
 }
 ```

@@ -105,12 +105,16 @@ public abstract class ActorConfigurer {
      *
      * @throws Exception Error
      */
-    public void destroy() throws Exception {
-        if (futures != null) {
-            for (Map.Entry<Integer, ActorFuture> future : futures.entrySet()) {
-                remove(future.getKey());
-            }
-        }
+    public void destroy() throws Exception {}
+
+
+    /**
+     * Data preprocessing | 数据预处理
+     * @param params data
+     * @return Object[]
+     */
+    public Object[] filter(Object[] params) throws Exception{
+        return params;
     }
 
 
@@ -231,7 +235,7 @@ public abstract class ActorConfigurer {
         List<Integer> status = future.getStatus();
         if (status.isEmpty() || status.contains(event.getState())) {
             try {
-                future.invoke(event.getArgs());
+                future.invoke(filter(event.getArgs()));
             } catch (Exception exception) {
                 readLock.unlock();
                 throw new RuntimeException(exception);
