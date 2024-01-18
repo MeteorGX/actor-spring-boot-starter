@@ -198,6 +198,30 @@ public abstract class ActorConfigurer {
 
 
     /**
+     * Invoke the @ActorMapping Method inside Actor
+     * 唤醒 Actor 内部的 Mapping 方法
+     *
+     * @param value @ActorMapping.value
+     * @param state @ActorMapping.state
+     * @param args  params
+     * @throws Exception Error
+     */
+    public void execute(@NonNull Integer value, @NonNull Integer state, Object... args) throws Exception {
+        if (futures != null) {
+            ActorFuture future = futures.get(value);
+            if (future == null) {
+                return;
+            }
+
+            List<Integer> status = future.getStatus();
+            if (status.isEmpty() || status.contains(state)) {
+                future.invoke(args);
+            }
+        }
+    }
+
+
+    /**
      * Push to actor’s message queue
      * 推送到 Actor 的消息队列
      *

@@ -27,12 +27,12 @@ public class ActorAutoConfiguration {
     @ConditionalOnMissingBean
     @Bean(initMethod = "init", destroyMethod = "destroy")
     public ActorEventContainer container(ActorConfigProperty property) {
-        if (property == null){
+        if (property == null) {
             return null;
         }
 
         ctx = property.getApplicationContext() == null ? ctx : property.getApplicationContext();
-        if (ctx == null){
+        if (ctx == null) {
             return null;
         }
         property.setApplicationContext(ctx);
@@ -40,9 +40,8 @@ public class ActorAutoConfiguration {
 
         ActorEventMonitor monitor = new ActorEventMonitor(property.getMonitorCore());
         ActorEventContainer container = new ActorEventContainer(
-                property.getContainerCapacity(),
                 monitor,
-                property.getConfigurerCapacity()
+                property.getContainerCapacity()
         );
         container.setIdleThreads(property.getMonitorIdleCore());
 

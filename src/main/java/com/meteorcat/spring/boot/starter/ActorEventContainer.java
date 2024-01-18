@@ -35,19 +35,15 @@ public class ActorEventContainer extends HashMap<Integer, ActorConfigurer> {
         this.configurers = new ArrayList<>();
     }
 
-    public ActorEventContainer(ActorEventMonitor monitor, int configurerCapacity) {
-        this.monitor = monitor;
-        this.configurers = new ArrayList<>(configurerCapacity);
-    }
 
-    public ActorEventContainer(int capacity, ActorEventMonitor monitor) {
+    public ActorEventContainer(ActorEventMonitor monitor, int capacity) {
         super(capacity);
         this.monitor = monitor;
-        this.configurers = new ArrayList<>();
+        this.configurers = new ArrayList<>(capacity);
     }
 
 
-    public ActorEventContainer(int capacity, ActorEventMonitor monitor, int configurerCapacity) {
+    public ActorEventContainer(ActorEventMonitor monitor, int capacity, int configurerCapacity) {
         super(capacity);
         this.monitor = monitor;
         this.configurers = new ArrayList<>(configurerCapacity);

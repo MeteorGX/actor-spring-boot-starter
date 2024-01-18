@@ -16,7 +16,6 @@ public class ActorConfigProperty {
 
     private Integer containerCapacity = 16;
 
-    private Integer configurerCapacity = 16;
 
 
     public void setApplicationContext(ApplicationContext ctx) {
@@ -50,13 +49,5 @@ public class ActorConfigProperty {
 
     public Integer getContainerCapacity() {
         return containerCapacity;
-    }
-
-    public void setConfigurerCapacity(Integer configurerCapacity) {
-        this.configurerCapacity = configurerCapacity;
-    }
-
-    public Integer getConfigurerCapacity() {
-        return configurerCapacity;
     }
 }
