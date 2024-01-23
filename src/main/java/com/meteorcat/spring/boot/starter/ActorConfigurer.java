@@ -230,11 +230,27 @@ public abstract class ActorConfigurer {
      * @param args  params
      */
     public void invoke(@NonNull Integer value, @NonNull Integer state, Object... args) {
+        if (futures == null) return;
+
+        // lock
         writeLock.lock();
-        if (events == null) {
-            events = new LinkedList<>();
+
+        // state exists?
+        ActorFuture future = futures.get(value);
+        if (future == null) {
+            writeLock.unlock();
+            return;
         }
-        events.add(new ActorMessage(value, state, args));
+
+        // state pass?
+        List<Integer> status = future.getStatus();
+        if (status.isEmpty() || status.contains(state)) {
+            // push message
+            if (events == null) {
+                events = new LinkedList<>();
+            }
+            events.add(new ActorMessage(value, state, args));
+        }
         writeLock.unlock();
     }
 
