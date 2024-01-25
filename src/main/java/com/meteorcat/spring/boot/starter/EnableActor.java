@@ -25,4 +25,12 @@ public @interface EnableActor {
      * @return ActorConfigurer
      */
     Class<? extends ActorConfigurer> owner();
+
+
+    /**
+     * Collection Capacity| 容器默认的数量
+     *
+     * @return int
+     */
+    int capacity() default 16;
 }

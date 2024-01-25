@@ -25,6 +25,7 @@ public class ActorEventContainer extends HashMap<Integer, ActorConfigurer> {
      */
     private final List<ActorConfigurer> configurers;
 
+
     /**
      * Idle threads
      */
@@ -53,6 +54,7 @@ public class ActorEventContainer extends HashMap<Integer, ActorConfigurer> {
     public void init() throws Exception {
         forEach((op, configurer) -> {
             if (!configurers.contains(configurer)) {
+                configurer.setContainer(this);
                 configurers.add(configurer);
             }
         });

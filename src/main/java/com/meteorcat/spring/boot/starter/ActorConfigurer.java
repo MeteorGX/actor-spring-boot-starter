@@ -21,22 +21,25 @@ public abstract class ActorConfigurer {
      * Searching all @ActorMapping methods on inheritance subclasses of ActorConfigurer
      * 搜索继承 ActorConfigurer 子类对象全部的 @ActorMapping 方法
      */
-    @Nullable
     private Map<Integer, ActorFuture> futures;
 
     /**
      * Search for all Mapping values whose inheritance actor configured subclasses
      * 搜索继承 ActorConfigurer 子类对象全部的 Mapping 对应值
      */
-    @Nullable
     private List<Integer> values;
 
     /**
      * Listening Actor's Message Queue
      * 监听的 Actor 消息队列
      */
-    @Nullable
     private Queue<ActorMessage> events;
+
+
+    /**
+     * container context | 容器 上下文
+     */
+    private ActorEventContainer container;
 
 
     /**
@@ -57,6 +60,12 @@ public abstract class ActorConfigurer {
      */
     private final Lock writeLock = lock.writeLock();
 
+    /**
+     * Collection capacity
+     * 容器默认数量
+     */
+    private int capacity = 6;
+
 
     /**
      * Actor initialisation method to be called from @Bean
@@ -70,16 +79,17 @@ public abstract class ActorConfigurer {
         if (enableActor == null || !enableActor.owner().getName().equals(configurer.getName())) {
             throw new ClassNotFoundException(String.format("Not Implemented @EnableActor(own = %s)", configurer.getName()));
         }
+        capacity = enableActor.capacity();// default capacity
 
         // search class methods
         Method[] methods = configurer.getMethods();
         if (values == null) {
-            values = new ArrayList<>(methods.length);
+            values = new ArrayList<>(capacity);
         }
 
 
         if (futures == null) {
-            futures = new HashMap<>(methods.length);
+            futures = new HashMap<>(capacity);
         }
 
 
@@ -131,12 +141,13 @@ public abstract class ActorConfigurer {
             Class<? extends ActorConfigurer> configurer = this.getClass();
             EnableActor enableActor = configurer.getAnnotation(EnableActor.class);
             if (enableActor == null) {
-                values = new ArrayList<>(0);
+                values = new ArrayList<>(capacity);
                 return values;
             }
 
             Method[] methods = configurer.getMethods();
-            values = new ArrayList<>(methods.length);
+            capacity = enableActor.capacity();
+            values = new ArrayList<>(capacity);
             for (Method method : methods) {
                 ActorMapping mapping = method.getAnnotation(ActorMapping.class);
                 if (mapping != null) {
@@ -156,7 +167,7 @@ public abstract class ActorConfigurer {
      */
     public Map<Integer, ActorFuture> futures() {
         if (futures == null) {
-            futures = new HashMap<>(0);
+            futures = new HashMap<>(capacity);
         }
         return futures;
     }
@@ -288,4 +299,32 @@ public abstract class ActorConfigurer {
         }
     }
 
+
+    /**
+     * Collection capacity
+     *
+     * @return int
+     */
+    public int getCapacity() {
+        return capacity;
+    }
+
+
+    /**
+     * Set container context
+     *
+     * @param container context
+     */
+    public void setContainer(ActorEventContainer container) {
+        this.container = container;
+    }
+
+    /**
+     * get container context
+     *
+     * @return ActorEventContainer
+     */
+    public ActorEventContainer getContainer() {
+        return container;
+    }
 }
