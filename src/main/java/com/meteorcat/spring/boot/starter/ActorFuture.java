@@ -4,6 +4,7 @@ import org.springframework.lang.NonNull;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -33,9 +34,9 @@ public class ActorFuture implements Serializable {
      * ActorMapping.state
      * ActorMapping映射数组: state
      */
-    private final List<Integer> status;
+    private final int[] status;
 
-    public ActorFuture(@NonNull Integer value, Object instance, @NonNull Method method, @NonNull List<Integer> status) {
+    public ActorFuture(@NonNull Integer value, Object instance, @NonNull Method method, @NonNull int[] status) {
         this.value = value;
         this.instance = instance;
         this.method = method;
@@ -55,7 +56,7 @@ public class ActorFuture implements Serializable {
         return method;
     }
 
-    public @NonNull List<Integer> getStatus() {
+    public @NonNull int[] getStatus() {
         return status;
     }
 
@@ -65,7 +66,7 @@ public class ActorFuture implements Serializable {
                 "value=" + value +
                 ", instance=" + instance +
                 ", method=" + method +
-                ", status=" + status +
+                ", status=" + Arrays.toString(status) +
                 '}';
     }
 

@@ -40,10 +40,11 @@ public class ActorConfig {
     }
 
 
-    @Bean(initMethod = "init", destroyMethod = "destroy")
+    @Bean
     public ActorEventContainer searchActor() {
         ActorEventContainer container = new ActorEventContainer(new ActorEventMonitor(5));
         container.setIdleThreads(1); // idle thread
+        container.setContext(context); // spring context
         Map<String, ActorConfigurer> classes = context.getBeansOfType(ActorConfigurer.class);
         for (Map.Entry<String, ActorConfigurer> clazz : classes.entrySet()) {
             ActorConfigurer configurer = clazz.getValue();
@@ -247,6 +248,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
 Okay, now it's time to write the logic code | 好的, 现在可以编写逻辑代码:
 
 ```java
+
 @EnableActor(owner = EchoLogic.class)
 public class EchoLogic extends ActorConfigurer {
 
@@ -268,6 +270,23 @@ public class EchoLogic extends ActorConfigurer {
     public Map<WebSocketSession, ScheduledFuture<?>> keepAlive = new HashMap<>();
 
     /**
+     * Init
+     *
+     */
+    @Override
+    public void init() {
+        logger.warn("server startup");
+    }
+
+    /**
+     * Exit
+     */
+    @Override
+    public void destroy() {
+        logger.warn("server exit");
+    }
+
+    /**
      * keep-alive
      * request: { "op": 111, "args":{ }}
      * response: timestamp
@@ -279,7 +298,7 @@ public class EchoLogic extends ActorConfigurer {
     public void tick(ActorEventContainer container, WebSocketSession session, JsonNode node) throws IOException {
         if (!keepAlive.containsKey(session)) {
             ScheduledFuture<?> future = container.scheduleAtFixedRate(() -> {
-                if (!session.isOpen()){
+                if (!session.isOpen()) {
                     keepAlive.get(session).cancel(true);
                     keepAlive.remove(session);
                 }
@@ -290,7 +309,7 @@ public class EchoLogic extends ActorConfigurer {
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
-            },5, 5, TimeUnit.SECONDS);
+            }, 5, 5, TimeUnit.SECONDS);
             keepAlive.put(session, future);
         }
     }
@@ -301,13 +320,22 @@ Request json data, test the logical code | 请求 JSON 数据, 测试这些逻�
 
 ```json lines
 // echo mapping
-{ "op": 100, "args":{ "text": "hello.world"}}
+{
+  "op": 100,
+  "args": {
+    "text": "hello.world"
+  }
+}
 
 // keep-alive request
-{ "op": 111, "args":{}}
+{
+  "op": 111,
+  "args": {}
+}
 ```
 
-> note: If the Bean thread manager is unable to call scheduled tasks, please use the configuration 'spring.main.allow-bean-definition-overriding=true' 
+> note: If the Bean thread manager is unable to call scheduled tasks, please use the configuration '
+> spring.main.allow-bean-definition-overriding=true' 
 
 
 

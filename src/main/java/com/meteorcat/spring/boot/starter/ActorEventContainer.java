@@ -1,5 +1,9 @@
 package com.meteorcat.spring.boot.starter;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import org.springframework.context.ApplicationContext;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,10 +31,20 @@ public class ActorEventContainer extends HashMap<Integer, ActorConfigurer> {
 
 
     /**
-     * Idle threads
+     * Idle threads | 待机线程
      */
     private int idleThreads = 0;
 
+    /**
+     * Spring Application Context | Spring 上下文
+     */
+    private ApplicationContext context;
+
+    /**
+     * Construct
+     *
+     * @param monitor event pool
+     */
     public ActorEventContainer(ActorEventMonitor monitor) {
         this.monitor = monitor;
         this.configurers = new ArrayList<>();
@@ -51,30 +65,24 @@ public class ActorEventContainer extends HashMap<Integer, ActorConfigurer> {
     }
 
 
-    public void init() throws Exception {
+    @PostConstruct
+    public void init() {
         forEach((op, configurer) -> {
             if (!configurers.contains(configurer)) {
                 configurer.setContainer(this);
+                configurer.setContext(context);
+                configurer.setMonitor(monitor);
                 configurers.add(configurer);
             }
         });
-
-        for (ActorConfigurer configurer : configurers) {
-            configurer.init();
-        }
 
         run();
     }
 
 
-    public void destroy() throws Exception {
-        try {
-            monitor.shutdown();
-        } finally {
-            for (ActorConfigurer configurer : configurers) {
-                configurer.destroy();
-            }
-        }
+    @PreDestroy
+    public void destroy() {
+        monitor.shutdown();
     }
 
 
@@ -123,5 +131,14 @@ public class ActorEventContainer extends HashMap<Integer, ActorConfigurer> {
 
     public int getCoreThreads() {
         return monitor.getCorePoolSize();
+    }
+
+
+    public void setContext(ApplicationContext context) {
+        this.context = context;
+    }
+
+    public ApplicationContext getContext() {
+        return context;
     }
 }
