@@ -1,2 +1,2 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-  com.meteorcat.spring.boot.starter.ActorAutoConfiguration
+#org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+#  com.meteorcat.spring.boot.starter.ActorAutoConfiguration

@@ -87,7 +87,6 @@ public abstract class ActorConfigurer {
      * Actor initialisation method to be called from @Bean
      * Actor 初始化方法, 用于 @Bean 调用
      */
-    @PostConstruct
     public void construct() {
         Class<? extends ActorConfigurer> configurer = this.getClass();
         EnableActor enableActor = configurer.getAnnotation(EnableActor.class);
@@ -125,7 +124,6 @@ public abstract class ActorConfigurer {
      * Actor invocation method for @Bean calls
      * Actor 退出调用的方法, 用于 @Bean 调用
      */
-    @PreDestroy
     public void destruct() {
         try {
             destroy();
@@ -274,6 +272,13 @@ public abstract class ActorConfigurer {
         writeLock.unlock();
     }
 
+    /**
+     * check message queue
+     * @return boolean
+     */
+    public boolean isEmptyEvent(){
+        return events.isEmpty();
+    }
 
     /**
      * Multi-thread execution of message queue processing
