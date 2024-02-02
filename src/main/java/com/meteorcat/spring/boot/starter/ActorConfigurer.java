@@ -1,7 +1,7 @@
 package com.meteorcat.spring.boot.starter;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.lang.NonNull;
 
@@ -18,6 +18,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * 多线程驱动的 Actor 服务, 采用消息队列处理转发消息
  */
 public abstract class ActorConfigurer {
+
+    private final Logger logger = LoggerFactory.getLogger(ActorConfigurer.class);
 
     /**
      * Searching all @ActorMapping methods on inheritance subclasses of ActorConfigurer
@@ -89,9 +91,10 @@ public abstract class ActorConfigurer {
      */
     public void construct() {
         Class<? extends ActorConfigurer> configurer = this.getClass();
+        String configurerName = configurer.getName();
         EnableActor enableActor = configurer.getAnnotation(EnableActor.class);
-        if (enableActor == null || !enableActor.owner().getName().equals(configurer.getName())) {
-            System.err.printf("Not Implemented @EnableActor(own = %s)%n", configurer.getName());
+        if (enableActor == null || !enableActor.owner().getName().equals(configurerName)) {
+            logger.error("Not Implemented @EnableActor(own = {})", configurerName);
             System.exit(1);
         }
         capacity = enableActor.capacity();// default capacity
@@ -103,10 +106,13 @@ public abstract class ActorConfigurer {
         for (Method method : methods) {
             ActorMapping mapping = method.getAnnotation(ActorMapping.class);
             if (mapping != null) {
+                // fetch variables
                 Integer op = mapping.value();
                 int[] status = mapping.state();
                 values.add(op);
-                futures.put(op, new ActorFuture(op, this, method, status));
+                ActorFuture future = new ActorFuture(op, this, method, status);
+                logger.info("Load @ActorMapping({}) = {}", configurerName, future);
+                futures.put(op, future);
             }
         }
 
@@ -114,8 +120,7 @@ public abstract class ActorConfigurer {
         try {
             init();
         } catch (Exception exception) {
-            exception.printStackTrace();
-            System.exit(1);
+            logger.trace(exception.getMessage());
         }
     }
 
@@ -128,7 +133,7 @@ public abstract class ActorConfigurer {
         try {
             destroy();
         } catch (Exception exception) {
-            exception.printStackTrace();
+            logger.trace(exception.getMessage());
         }
     }
 
@@ -150,7 +155,7 @@ public abstract class ActorConfigurer {
      * @param params data
      * @return Object[]
      */
-    public Object[] filter(Object[] params) throws Exception {
+    public Object[] filter(Object[] params) {
         return params;
     }
 
@@ -206,13 +211,16 @@ public abstract class ActorConfigurer {
      *
      * @param value @ActorMapping.value
      * @param args  params
-     * @throws Exception Error
      */
-    public void execute(Integer value, Object... args) throws Exception {
+    public void execute(Integer value, Object... args) {
         if (futures != null) {
             ActorFuture future = futures.get(value);
             if (future != null) {
-                future.invoke(args);
+                try {
+                    future.invoke(args);
+                } catch (Exception exception) {
+                    logger.error(exception.getMessage());
+                }
             }
         }
     }
@@ -225,9 +233,8 @@ public abstract class ActorConfigurer {
      * @param value @ActorMapping.value
      * @param state @ActorMapping.state
      * @param args  params
-     * @throws Exception Error
      */
-    public void execute(@NonNull Integer value, @NonNull Integer state, Object... args) throws Exception {
+    public void execute(@NonNull Integer value, @NonNull Integer state, Object... args) {
         if (futures != null) {
             ActorFuture future = futures.get(value);
             if (future == null) {
@@ -236,7 +243,11 @@ public abstract class ActorConfigurer {
 
             int[] status = future.getStatus();
             if (status.length == 0 || Arrays.binarySearch(status, state) >= 0) {
-                future.invoke(args);
+                try {
+                    future.invoke(args);
+                } catch (Exception exception) {
+                    logger.error(exception.getMessage());
+                }
             }
         }
     }
@@ -274,9 +285,10 @@ public abstract class ActorConfigurer {
 
     /**
      * check message queue
+     *
      * @return boolean
      */
-    public boolean isEmptyEvent(){
+    public boolean isEmptyEvent() {
         return events.isEmpty();
     }
 
@@ -284,7 +296,7 @@ public abstract class ActorConfigurer {
      * Multi-thread execution of message queue processing
      * 多线程执行的消息队列处理
      */
-    public void run() throws RuntimeException {
+    public void run(){
         if (futures == null) return;
         readLock.lock();
         if (events.isEmpty()) {
@@ -304,7 +316,7 @@ public abstract class ActorConfigurer {
             try {
                 future.invoke(filter(event.getArgs()));
             } catch (Exception exception) {
-                throw new RuntimeException(exception);
+                logger.error(exception.getMessage());
             } finally {
                 readLock.unlock();
             }
