@@ -25,4 +25,12 @@ public @interface ActorMapping {
      * @return int[]
      */
     int[] state() default {};
+
+    /**
+     * Actor Thread-Safe
+     * todo: Must be implemented
+     *
+     * @return ActorThreadState
+     */
+    ActorThreadState threadState() default ActorThreadState.ThreadSafe;
 }

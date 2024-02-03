@@ -5,7 +5,6 @@ import org.springframework.lang.NonNull;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * EnableActor @ActorMapping methods | Actor 启用的 @ActorMapping 方法
@@ -36,11 +35,19 @@ public class ActorFuture implements Serializable {
      */
     private final int[] status;
 
-    public ActorFuture(@NonNull Integer value, Object instance, @NonNull Method method, @NonNull int[] status) {
+    /**
+     * ActorMapping.threadState
+     * ActorMapping是否设定线程安全
+     */
+    private final ActorThreadState threadState;
+
+
+    public ActorFuture(@NonNull Integer value, Object instance, @NonNull Method method, @NonNull int[] status, @NonNull ActorThreadState threadState) {
         this.value = value;
         this.instance = instance;
         this.method = method;
         this.status = status;
+        this.threadState = threadState;
     }
 
 
@@ -60,6 +67,10 @@ public class ActorFuture implements Serializable {
         return status;
     }
 
+    public @NonNull ActorThreadState getThreadState() {
+        return threadState;
+    }
+
     @Override
     public String toString() {
         return "ActorFuture{" +
@@ -67,6 +78,7 @@ public class ActorFuture implements Serializable {
                 ", instance=" + instance +
                 ", method=" + method +
                 ", status=" + Arrays.toString(status) +
+                ", threadState=" + threadState +
                 '}';
     }
 
