@@ -4,10 +4,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import org.springframework.context.ApplicationContext;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -19,6 +16,13 @@ import java.util.concurrent.TimeUnit;
  * Actor 多线程调用工具和相关类容器
  */
 public class ActorEventContainer extends HashMap<Integer, ActorConfigurer> {
+
+
+    /**
+     * Default invoke millisecond | 默认线程唤醒的微秒
+     */
+    public static long DEFAULT_THREAD_MILLISECOND = 1000L;
+
 
     /**
      * event monitor| 事件线程管理器
@@ -36,6 +40,12 @@ public class ActorEventContainer extends HashMap<Integer, ActorConfigurer> {
      */
     private final ApplicationContext context;
 
+
+    /**
+     * Thread Tasks | 线程任务
+     */
+    private final ScheduledFuture<?>[] tasks;
+
     /**
      * Construct
      *
@@ -45,6 +55,8 @@ public class ActorEventContainer extends HashMap<Integer, ActorConfigurer> {
         this.monitor = monitor;
         this.context = context;
         this.configurers = new ArrayList<>();
+        this.tasks = new ScheduledFuture[monitor.getCorePoolSize()];
+        Arrays.fill(this.tasks, null);
     }
 
 
@@ -53,6 +65,8 @@ public class ActorEventContainer extends HashMap<Integer, ActorConfigurer> {
         this.monitor = monitor;
         this.context = context;
         this.configurers = new ArrayList<>(capacity);
+        this.tasks = new ScheduledFuture[monitor.getCorePoolSize()];
+        Arrays.fill(this.tasks, null);
     }
 
 
@@ -61,6 +75,8 @@ public class ActorEventContainer extends HashMap<Integer, ActorConfigurer> {
         this.monitor = monitor;
         this.context = context;
         this.configurers = new ArrayList<>(configurerCapacity);
+        this.tasks = new ScheduledFuture[monitor.getCorePoolSize()];
+        Arrays.fill(this.tasks, null);
     }
 
 
@@ -97,8 +113,8 @@ public class ActorEventContainer extends HashMap<Integer, ActorConfigurer> {
     public void run() {
         int coreThreads = monitor.getCorePoolSize();
         for (int i = 0; i < coreThreads; i++) {
-            long idx = i + 1;
-            monitor.scheduleAtFixedRate(() -> {
+            long millisecond = (i + 1) + DEFAULT_THREAD_MILLISECOND;
+            tasks[i] = monitor.scheduleWithFixedDelay(() -> {
                 if (monitor.isShutdown()) {
                     return;
                 }
@@ -107,7 +123,7 @@ public class ActorEventContainer extends HashMap<Integer, ActorConfigurer> {
                         configurer.run();
                     }
                 });
-            }, 0, idx * 100 + 1000, TimeUnit.MILLISECONDS);
+            }, 0, millisecond, TimeUnit.MILLISECONDS);
         }
     }
 
@@ -139,5 +155,13 @@ public class ActorEventContainer extends HashMap<Integer, ActorConfigurer> {
 
     public ApplicationContext getContext() {
         return context;
+    }
+
+
+    public ScheduledFuture<?> getFuture(int i) {
+        if (i < 0 || i >= tasks.length) {
+            return null;
+        }
+        return tasks[i];
     }
 }
