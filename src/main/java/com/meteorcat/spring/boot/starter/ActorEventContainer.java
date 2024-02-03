@@ -21,7 +21,7 @@ public class ActorEventContainer extends HashMap<Integer, ActorConfigurer> {
     /**
      * Default invoke millisecond | 默认线程唤醒的微秒
      */
-    public static long DEFAULT_THREAD_MILLISECOND = 1000L;
+    public static long DEFAULT_THREAD_MILLISECOND = 60L;
 
 
     /**
@@ -113,9 +113,9 @@ public class ActorEventContainer extends HashMap<Integer, ActorConfigurer> {
     public void run() {
         int coreThreads = monitor.getCorePoolSize();
         for (int i = 0; i < coreThreads; i++) {
-            long millisecond = (i + 1) + DEFAULT_THREAD_MILLISECOND;
+            long millisecond = (i + 1) * 60L + DEFAULT_THREAD_MILLISECOND;
             tasks[i] = monitor.scheduleWithFixedDelay(() -> {
-                if (monitor.isShutdown()) {
+                if (monitor.isShutdown() || monitor.isTerminated()) {
                     return;
                 }
                 forEach((op, configurer) -> {

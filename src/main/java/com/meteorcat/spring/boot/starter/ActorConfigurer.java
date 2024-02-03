@@ -109,9 +109,12 @@ public abstract class ActorConfigurer {
                 // fetch variables
                 Integer op = mapping.value();
                 int[] status = mapping.state();
-                values.add(op);
-                ActorFuture future = new ActorFuture(op, this, method, status);
+                ActorThreadState threadState = mapping.threadState();
+
+                // create
+                ActorFuture future = new ActorFuture(op, this, method, status, threadState);
                 logger.info("Load @ActorMapping({}) = {}", configurerName, future);
+                values.add(op);
                 futures.put(op, future);
             }
         }
@@ -296,11 +299,10 @@ public abstract class ActorConfigurer {
      * Multi-thread execution of message queue processing
      * 多线程执行的消息队列处理
      */
-    public void run(){
+    public void run() {
         if (futures == null) return;
         readLock.lock();
         if (events.isEmpty()) {
-            readLock.unlock();
             return;
         }
 
