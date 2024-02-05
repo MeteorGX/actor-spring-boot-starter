@@ -109,10 +109,9 @@ public abstract class ActorConfigurer {
                 // fetch variables
                 Integer op = mapping.value();
                 int[] status = mapping.state();
-                ActorThreadState threadState = mapping.threadState();
 
                 // create
-                ActorFuture future = new ActorFuture(op, this, method, status, threadState);
+                ActorFuture future = new ActorFuture(op, this, method, status);
                 logger.info("Load @ActorMapping({}) = {}", configurerName, future);
                 values.add(op);
                 futures.put(op, future);

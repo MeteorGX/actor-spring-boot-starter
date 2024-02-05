@@ -14,7 +14,7 @@
     <groupId>com.meteorcat.spring.boot</groupId>
     <artifactId>actor-spring-boot-starter</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.40-SNAPSHOT</version>
+    <version>1.0.41-SNAPSHOT</version>
 
     <name>actor-spring-boot-starter</name>
     <description>actor-spring-boot-starter</description>
