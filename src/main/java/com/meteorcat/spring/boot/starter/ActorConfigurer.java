@@ -7,9 +7,9 @@ import org.springframework.lang.NonNull;
 
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Actor Services | Actor基础服务
@@ -37,7 +37,7 @@ public abstract class ActorConfigurer {
      * Listening Actor's Message Queue
      * 监听的 Actor 消息队列
      */
-    private final Queue<ActorMessage> events = new LinkedList<>();
+    private final Queue<ActorMessage> events = new ConcurrentLinkedQueue<>();
 
 
     /**
@@ -50,19 +50,8 @@ public abstract class ActorConfigurer {
      * Actor instances with read-write locks
      * Actor 所有的读写锁实例
      */
-    private final ReadWriteLock lock = new ReentrantReadWriteLock();
+    private final Lock lock = new ReentrantLock();
 
-    /**
-     * Actor read lock
-     * Actor 读取锁
-     */
-    private final Lock readLock = lock.readLock();
-
-    /**
-     * Actor write lock
-     * Actor 写入锁
-     */
-    private final Lock writeLock = lock.writeLock();
 
     /**
      * Collection capacity
@@ -266,13 +255,10 @@ public abstract class ActorConfigurer {
     public void invoke(@NonNull Integer value, @NonNull Integer state, Object... args) {
         if (futures == null) return;
 
-        // lock
-        writeLock.lock();
 
         // state exists?
         ActorFuture future = futures.get(value);
         if (future == null) {
-            writeLock.unlock();
             return;
         }
 
@@ -282,7 +268,6 @@ public abstract class ActorConfigurer {
             // push message
             events.add(new ActorMessage(value, state, args));
         }
-        writeLock.unlock();
     }
 
     /**
@@ -299,16 +284,18 @@ public abstract class ActorConfigurer {
      * 多线程执行的消息队列处理
      */
     public void run() {
-        if (futures == null) return;
-        readLock.lock();
-        if (events.isEmpty()) {
+        if (futures == null || events.isEmpty()) return;
+
+        lock.lock();
+        ActorMessage event = events.poll();
+        if (event == null) {
+            lock.unlock();
             return;
         }
 
-        ActorMessage event = events.poll();
         ActorFuture future = futures.get(event.getValue());
         if (future == null) {
-            readLock.unlock();
+            lock.unlock();
             return;
         }
 
@@ -319,10 +306,10 @@ public abstract class ActorConfigurer {
             } catch (Exception exception) {
                 logger.error(exception.getMessage());
             } finally {
-                readLock.unlock();
+                lock.unlock();
             }
         } else {
-            readLock.unlock();
+            lock.unlock();
         }
     }
 
